@@ -20,11 +20,11 @@
 
 
 const fs = require('fs');
-const mnemonic = fs.readFileSync(".secret").toString().trim();
-const infuraRinkebyUrl = fs.readFileSync(".infura_rinkeby").toString().trim();
-const infuraKovanUrl = fs.readFileSync(".infura_kovan").toString().trim();
-const infuraLiveUrl = fs.readFileSync(".infura_live").toString().trim();
-const HDWalletProvider = require('truffle-hdwallet-provider');
+//const mnemonic = fs.readFileSync(".secret").toString().trim();
+//const infuraRinkebyUrl = fs.readFileSync(".infura_rinkeby").toString().trim();
+//const infuraKovanUrl = fs.readFileSync(".infura_kovan").toString().trim();
+//const infuraLiveUrl = fs.readFileSync(".infura_live").toString().trim();
+//const HDWalletProvider = require('truffle-hdwallet-provider');
 const Web3 = require('web3');
 const web3 = new Web3();
 
@@ -46,12 +46,14 @@ module.exports = {
     // tab if you use this network and you must also set the `host`, `port` and `network_id`
     // options below to some value.
     //
-    // development: {
-    //  host: "127.0.0.1",     // Localhost (default: none)
-    //  port: 8545,            // Standard Ethereum port (default: none)
-    //  network_id: "*",       // Any network (default: none)
-    // },
 
+    /*
+    development: {
+      host: "127.0.0.1",     // Localhost (default: none)
+      port: 8545,            // Standard Ethereum port (default: none)
+      network_id: "*",       // Any network (default: none)
+    },
+    
     rinkeby: {
       provider: () => new HDWalletProvider(mnemonic, infuraRinkebyUrl),
       network_id: 4,
@@ -74,6 +76,7 @@ module.exports = {
       network_id: 1,
       gasPrice: web3.utils.toWei('15', 'gwei')
     }
+    */
 
     // Another network with more advanced options...
     // advanced: {

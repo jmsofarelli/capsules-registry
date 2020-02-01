@@ -15,7 +15,7 @@ contract CapsulesRegistry {
 
     /*
      * This struct represents a Capsule stored in IPFS
-     * An IPFS address is a multihash, calculated using the hash function, hash size and digest
+     * An IPFS address is a multihash, calculated using the hash function, hash size and IPFS digest
      */
     struct Capsule {
         bytes32 ipfsDigest;
@@ -24,14 +24,14 @@ contract CapsulesRegistry {
         address owner;
     }
 
-    // Maps a content hash (calculated using keccak256 algorithm) to a Capsule stored in IPFS
-    mapping (bytes32 => Capsule) public capsules;
+    // Number of capsules
+    uint public numCapsules;
 
-    /*
-     * When there is a new version of the content, a new content hash is generated
-     * This mapping is used to link the hash of the old version to the hash of the new version
-     */
-    mapping (bytes32 => bytes32) public versions;
+    // Capsules objects indexed by ID (uint). NOTE: the first valid ID is 1
+    mapping (uint => Capsule) public capsules;
+
+    // Maps the content hash (calculated using keccak256 algorithm) to the Capsule ID
+    mapping (bytes32 => uint) public capsuleIDsByHash;
 
     /**
      * @dev Event emitted when a new Capsule is registered
@@ -39,14 +39,6 @@ contract CapsulesRegistry {
      * @param _owner The address that registered the Capsule
      */
     event CapsuleRegistered(bytes32 _contentHash, address _owner);
-
-    /**
-     * @dev Event emitted when a new version of a content is registered
-     * @param _oldContentHash The hash of the old version
-     * @param _newContentHash The hash of the new version 
-     * @param _owner The address that registered the new version
-     */
-    event VersionUpdated(bytes32 _oldContentHash, bytes32 _newContentHash, address _owner);
 
     /**
       * @dev Registers a Capsule
@@ -58,31 +50,56 @@ contract CapsulesRegistry {
     function registerCapsule(bytes32 _contentHash, bytes32 _ipfsDigest, uint8 _hashFunction, uint8 _hashSize)
         public
     {
-        require(capsules[_contentHash].owner == address(0), 'The Capsule is already registered!');
-        capsules[_contentHash] = Capsule({
+        // Check if a Capsule already exists for the content hash
+        require(capsuleIDsByHash[_contentHash] == 0, 'The Capsule is already registered!');
+        
+        // Generate an ID for the new Capsule
+        numCapsules++;
+        uint capsuleID = numCapsules;
+        
+        // Adds the new Capsule
+        capsules[capsuleID] = Capsule({
             ipfsDigest: _ipfsDigest,
             hashFunction: _hashFunction,
             hashSize: _hashSize,
             owner: msg.sender
         });
+
+        // Update mapping between content hash and Capsule ID
+        capsuleIDsByHash[_contentHash] = capsuleID;
+
+        // Log registered Capsule
         emit CapsuleRegistered(_contentHash, msg.sender);
     }
 
-    /**  
-     * @dev Registers a new version of a content
-     * NOTE: This function only links the old version of the content to the new version, using their hashes
-     * NOTE: This function DOES NOT register the content Capsule. For this purpose, the function registerCapsule should be used
-     * @param _oldContentHash The hash of the old version 
-     * @param _newContentHash The hash of the new version
-     */ 
-    function updateVersion (bytes32 _oldContentHash, bytes32 _newContentHash)
+    /**
+     * @dev Get the owner of the Capsule
+     * @param _contentHash The hash of the content
+     * @return The address of the owner of the Capsule
+     */
+    function getOwner(bytes32 _contentHash)
         public
+        view
+        returns (address)
     {
-        require(capsules[_oldContentHash].owner != address(0), 'The content should have a registered Capsule associated with it!');
-        require(capsules[_oldContentHash].owner == msg.sender, 'Only the owner of the content can register a new version of it!');
-        require(versions[_oldContentHash] == "", 'There is already a new version of the content registered');
-        versions[_oldContentHash] = _newContentHash;
-        emit VersionUpdated(_oldContentHash, _newContentHash, msg.sender);
+        return capsules[capsuleIDsByHash[_contentHash]].owner;
     }
-
+    
+    /** 
+     * @dev Get the Capsule associated with the content hash
+     * @param _contentHash The hash of the content
+     * @return ipfsDigest The IPFS digest
+     * @return hashFunction The IPFS hash function 
+     * @return hashSize The IPFS hash size
+     * @return owner The address of the owner
+     */
+    function getCapsule(bytes32 _contentHash)
+        public
+        view
+        returns (bytes32 ipfsDigest, uint8 hashFunction, uint8 hashSize, address owner)
+    {
+        Capsule storage capsule = capsules[capsuleIDsByHash[_contentHash]];
+        return (capsule.ipfsDigest, capsule.hashFunction, capsule.hashSize, capsule.owner);
+    }
+    
 }
